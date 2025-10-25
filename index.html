@@ -5,77 +5,155 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>From Cave to Code — Interactive Timeline</title>
 <style>
-body{
-  font-family:system-ui,sans-serif;
-  margin:40px;
-  background:#fafafa;
-  color:#333;
-  overflow:hidden;
+body {
+  font-family: system-ui, sans-serif;
+  margin: 40px;
+  background: #fafafa;
+  color: #333;
+  overflow: hidden;
 }
-h1,h2{text-align:center;margin-bottom:10px;}
-svg{background:#fff;border:1px solid #ccc;border-radius:8px;}
-.event{cursor:pointer;transition:transform .2s;}
-.event:hover{transform:scale(1.3);stroke:#000;stroke-width:1px;}
-.tooltip{
-  position:absolute;background:white;border:1px solid #ccc;
-  padding:6px 10px;border-radius:4px;pointer-events:none;
-  font-size:.9em;max-width:260px;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
+h1, h2 { text-align: center; margin-bottom: 10px; }
+svg { background: #fff; border: 1px solid #ccc; border-radius: 8px; }
+
+.controls {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.controls label {
+  margin: 0 10px;
+  cursor: pointer;
+  user-select: none;
+}
+input[type="checkbox"] {
+  margin-right: 4px;
+}
+
+.event { cursor: pointer; transition: transform .2s; }
+.event:hover { transform: scale(1.3); stroke: #000; stroke-width: 1px; }
+
+.tooltip {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  font-size: .9em;
+  max-width: 260px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
 }
 </style>
 </head>
 <body>
-<h1>From Cave to Code</h1>
-<h2>Mapping Media and Interactivity</h2>
-<svg id="timeline" width="100%" height="500"></svg>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script>
-// --- Data ---
-const data=[
- {year:-30000,title:"Cave Paintings",category:"Visual",description:"Early symbolic communication through images."},
- {year:-3200,title:"Cuneiform Writing",category:"Visual",description:"One of the earliest known writing systems."},
- {year:1440,title:"Printing Press",category:"Visual",description:"Mass communication revolution."},
- {year:1877,title:"Phonograph",category:"Sound",description:"First device to record and reproduce sound."},
- {year:1927,title:"Sound Film",category:"Visual",description:"Synchronizing image and sound."},
- {year:1972,title:"Pong",category:"Interactive",description:"One of the first video games."},
- {year:1991,title:"World Wide Web",category:"Digital",description:"Hypertext and global connectivity."},
- {year:2025,title:"AI Art Systems",category:"Digital",description:"Generative and interactive art powered by algorithms."}
-];
+  <h1>From Cave to Code</h1>
+  <h2>Mapping Media and Interactivity</h2>
 
-// --- Setup ---
-const margin={top:60,right:40,bottom:60,left:40};
-const w=window.innerWidth-margin.left-margin.right-100;
-const h=400-margin.top-margin.bottom;
-const svg=d3.select("#timeline")
-  .append("g")
-  .attr("transform",`translate(${margin.left},${margin.top})`);
+  <div class="controls">
+    <label><input type="checkbox" value="Visual" checked> Visual</label>
+    <label><input type="checkbox" value="Sound" checked> Sound</label>
+    <label><input type="checkbox" value="Interactive" checked> Interactive</label>
+    <label><input type="checkbox" value="Digital" checked> Digital</label>
+  </div>
 
-// --- Log-like compressed scale ---
-const years=data.map(d=>d.year);
-const minYear=d3.min(years),maxYear=d3.max(years);
-const compress=y=>{
-  // pseudo-log compression for negative & positive values
-  const s=y<0?-1:1;
-  return s*Math.log10(Math.abs(y)+1);
-};
-const x=d3.scaleLinear()
-  .domain([compress(minYear),compress(maxYear)])
-  .range([0,w]);
+  <svg id="timeline" width="100%" height="500"></svg>
 
-// --- Axis ---
-const ticks=data.map(d=>d.year);
-const xAxis=d3.axisBottom(x)
-  .tickValues(ticks.map(compress))
-  .tickFormat((_,i)=>ticks[i]);
-const axisGroup=svg.append("g")
-  .attr("transform",`translate(0,${h})`)
-  .call(xAxis);
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const data = [
+      {year:-30000,title:"Cave Paintings",category:"Visual",description:"Early symbolic communication through images."},
+      {year:-3200,title:"Cuneiform Writing",category:"Visual",description:"One of the earliest known writing systems."},
+      {year:1440,title:"Printing Press",category:"Visual",description:"Mass communication revolution."},
+      {year:1877,title:"Phonograph",category:"Sound",description:"First device to record and reproduce sound."},
+      {year:1927,title:"Sound Film",category:"Visual",description:"Synchronizing image and sound."},
+      {year:1972,title:"Pong",category:"Interactive",description:"One of the first video games."},
+      {year:1991,title:"World Wide Web",category:"Digital",description:"Hypertext and global connectivity."},
+      {year:2025,title:"AI Art Systems",category:"Digital",description:"Generative and interactive art powered by algorithms."}
+    ];
 
-// --- Events ---
-const colors={Visual:"#2a9d8f",Sound:"#e76f51",Interactive:"#f4a261",Digital:"#264653"};
-const eventsGroup=svg.append("g").attr("class","events");
+    const margin = { top: 60, right: 40, bottom: 60, left: 40 };
+    const w = window.innerWidth - margin.left - margin.right - 100;
+    const h = 400 - margin.top - margin.bottom;
 
-eventsGroup.selectAll("circle")
-  .data(data)
-  .enter()
-  .appen
+    const svg = d3.select("#timeline")
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // compressed pseudo-log scale
+    const compress = y => {
+      const s = y < 0 ? -1 : 1;
+      return s * Math.log10(Math.abs(y) + 1);
+    };
+    const years = data.map(d => d.year);
+    const x = d3.scaleLinear()
+      .domain([compress(d3.min(years)), compress(d3.max(years))])
+      .range([0, w]);
+
+    const ticks = data.map(d => d.year);
+    const xAxis = d3.axisBottom(x)
+      .tickValues(ticks.map(compress))
+      .tickFormat((_, i) => ticks[i]);
+    const axisGroup = svg.append("g")
+      .attr("transform", `translate(0,${h})`)
+      .call(xAxis);
+
+    const colors = {
+      Visual: "#2a9d8f",
+      Sound: "#e76f51",
+      Interactive: "#f4a261",
+      Digital: "#264653"
+    };
+
+    const eventsGroup = svg.append("g").attr("class", "events");
+    const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+
+    function updateTimeline() {
+      const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+
+      const filtered = data.filter(d => checked.includes(d.category));
+
+      const circles = eventsGroup.selectAll(".event")
+        .data(filtered, d => d.title);
+
+      circles.enter()
+        .append("circle")
+        .attr("class", "event")
+        .attr("cx", d => x(compress(d.year)))
+        .attr("cy", h / 2)
+        .attr("r", 8)
+        .attr("fill", d => colors[d.category] || "#999")
+        .on("mouseover", (event, d) => {
+          tooltip.transition().duration(200).style("opacity", .95);
+          tooltip.html(`<strong>${d.title}</strong><br>${d.year}<br>${d.description}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 40) + "px");
+        })
+        .on("mouseout", () => tooltip.transition().duration(300).style("opacity", 0))
+        .merge(circles)
+        .attr("cx", d => x(compress(d.year)))
+        .attr("cy", h / 2)
+        .attr("fill", d => colors[d.category] || "#999");
+
+      circles.exit().remove();
+    }
+
+    updateTimeline();
+
+    // Zoom and pan
+    const zoom = d3.zoom()
+      .scaleExtent([.5, 10])
+      .translateExtent([[0, 0], [w, h]])
+      .on("zoom", e => {
+        const t = e.transform;
+        axisGroup.attr("transform", `translate(${t.x},${h}) scale(${t.k},1)`);
+        eventsGroup.attr("transform", `translate(${t.x},0) scale(${t.k},1)`);
+      });
+
+    d3.select("#timeline").call(zoom);
+
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb =>
+      cb.addEventListener('change', updateTimeline)
+    );
+  </script>
+</body>
+</html>
