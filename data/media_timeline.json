@@ -1,15 +1,10 @@
 [
-  { "year": -30000, "title": "Cave Paintings", "category": "Visual", "description": "Earliest representational art found in European caves." },
-  { "year": -3200,  "title": "Writing Systems", "category": "Visual", "description": "Sumerian cuneiform; beginning of recorded communication." },
-  { "year": 1440,   "title": "Printing Press", "category": "Visual", "description": "Gutenberg’s movable type revolutionizes reproduction." },
-  { "year": 1839,   "title": "Photography", "category": "Visual", "description": "Daguerreotype introduces mechanical image capture." },
-  { "year": 1877,   "title": "Phonograph", "category": "Sound", "description": "Edison’s device records and plays back sound." },
-  { "year": 1895,   "title": "Film Projection", "category": "Visual", "description": "Lumière brothers’ public screenings of motion pictures." },
-  { "year": 1920,   "title": "Radio Broadcast", "category": "Sound", "description": "Mass communication via electromagnetic waves." },
-  { "year": 1950,   "title": "Television", "category": "Visual", "description": "Visual broadcast becomes a household medium." },
-  { "year": 1960,   "title": "Synthesizer", "category": "Sound", "description": "Electronic instruments redefine composition." },
-  { "year": 1972,   "title": "Video Games", "category": "Interactive", "description": "Pong and early arcades introduce digital play." },
-  { "year": 1991,   "title": "World Wide Web", "category": "Digital", "description": "Hypertext protocol enables the modern internet." },
-  { "year": 2004,   "title": "Social Media", "category": "Digital", "description": "Web 2.0 connects billions through user-generated content." },
-  { "year": 2016,   "title": "VR & AR", "category": "Interactive", "description": "Immersive environments blend digital and physical." }
+  {"year": -30000, "title": "Cave Paintings", "category": "Visual", "description": "Early symbolic communication through images."},
+  {"year": -3200, "title": "Cuneiform Writing", "category": "Visual", "description": "One of the earliest known writing systems."},
+  {"year": 1440, "title": "Printing Press", "category": "Visual", "description": "Mass communication revolution."},
+  {"year": 1877, "title": "Phonograph", "category": "Sound", "description": "First device to record and reproduce sound."},
+  {"year": 1927, "title": "Sound Film", "category": "Visual", "description": "Synchronizing image and sound."},
+  {"year": 1972, "title": "Pong", "category": "Interactive", "description": "One of the first video games."},
+  {"year": 1991, "title": "World Wide Web", "category": "Digital", "description": "Hypertext and global connectivity."},
+  {"year": 2025, "title": "AI Art Systems", "category": "Digital", "description": "Generative and interactive art powered by algorithms."}
 ]
