@@ -1,52 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>From Cave to Code — Interactive Timeline</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>From Cave to Code — Timeline</title>
 <style>
-body {
-  font-family: system-ui, sans-serif;
-  margin: 40px;
-  background: #fafafa;
-  color: #333;
-  overflow: hidden;
-}
-h1, h2 { text-align: center; margin-bottom: 10px; }
-svg { background: #fff; border: 1px solid #ccc; border-radius: 8px; }
-
-.controls {
-  text-align: center;
-  margin-bottom: 15px;
-}
-.controls label {
-  margin: 0 10px;
-  cursor: pointer;
-  user-select: none;
-}
-input[type="checkbox"] {
-  margin-right: 4px;
-}
-
-.event { cursor: pointer; transition: transform .2s; }
-.event:hover { transform: scale(1.3); stroke: #000; stroke-width: 1px; }
-
-.tooltip {
-  position: absolute;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 6px 10px;
-  border-radius: 4px;
-  pointer-events: none;
-  font-size: .9em;
-  max-width: 260px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.1);
-}
+  :root{--bg:#fafafa;--card:#fff;--muted:#666}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:28px; background:var(--bg); color:#222;}
+  header{text-align:center;margin-bottom:12px}
+  header h1{margin:0;font-size:1.6rem}
+  header p{margin:6px 0 0;color:var(--muted)}
+  .controls{display:flex;gap:12px;justify-content:center;margin:12px 0}
+  .controls label{font-size:0.95rem;cursor:pointer}
+  svg{display:block;margin:0 auto;background:var(--card);border:1px solid #e3e3e3;border-radius:8px}
+  .tooltip{position:absolute;background:#fff;border:1px solid #ddd;padding:8px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.08);pointer-events:none;font-size:0.95rem;max-width:300px}
+  .notice{margin:18px auto;text-align:center;color:#b00}
+  .debug{white-space:pre-wrap;background:#111;color:#efe;padding:8px;border-radius:6px;font-family:monospace;font-size:12px;max-height:160px;overflow:auto}
 </style>
 </head>
 <body>
-  <h1>From Cave to Code</h1>
-  <h2>Mapping Media and Interactivity</h2>
+  <header>
+    <h1>From Cave to Code</h1>
+    <p>Interactive timeline of visual, sound and interactive media</p>
+  </header>
 
   <div class="controls">
     <label><input type="checkbox" value="Visual" checked> Visual</label>
@@ -55,105 +31,173 @@ input[type="checkbox"] {
     <label><input type="checkbox" value="Digital" checked> Digital</label>
   </div>
 
-  <svg id="timeline" width="100%" height="500"></svg>
+  <svg id="timeline" width="1000" height="520" aria-label="Timeline visualization"></svg>
+  <div id="fallback" class="notice" style="display:none"></div>
+  <div id="debug" class="debug" style="display:none"></div>
 
+  <!-- D3 v7 CDN -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
+
   <script>
-    const data = [
-      {year:-30000,title:"Cave Paintings",category:"Visual",description:"Early symbolic communication through images."},
-      {year:-3200,title:"Cuneiform Writing",category:"Visual",description:"One of the earliest known writing systems."},
-      {year:1440,title:"Printing Press",category:"Visual",description:"Mass communication revolution."},
-      {year:1877,title:"Phonograph",category:"Sound",description:"First device to record and reproduce sound."},
-      {year:1927,title:"Sound Film",category:"Visual",description:"Synchronizing image and sound."},
-      {year:1972,title:"Pong",category:"Interactive",description:"One of the first video games."},
-      {year:1991,title:"World Wide Web",category:"Digital",description:"Hypertext and global connectivity."},
-      {year:2025,title:"AI Art Systems",category:"Digital",description:"Generative and interactive art powered by algorithms."}
-    ];
+  // Wrap everything so failures are caught
+  (function(){
+    try {
+      // --- DATA (you can later move this to /data/*.json) ---
+      const data = [
+        {year:-30000,title:"Cave Paintings",category:"Visual",description:"Earliest representational art."},
+        {year:-3200,title:"Cuneiform Writing",category:"Visual",description:"Early written records."},
+        {year:1440,title:"Printing Press",category:"Visual",description:"Movable type; mass reproduction."},
+        {year:1877,title:"Phonograph",category:"Sound",description:"First device to record and play sound."},
+        {year:1927,title:"Sound Film",category:"Visual",description:"Synchronized audio+image."},
+        {year:1972,title:"Pong",category:"Interactive",description:"Early arcade videogame."},
+        {year:1991,title:"World Wide Web",category:"Digital",description:"Hypertext on the Internet."},
+        {year:2025,title:"AI Art Systems",category:"Digital",description:"Generative visual and sonic systems."}
+      ];
 
-    const margin = { top: 60, right: 40, bottom: 60, left: 40 };
-    const w = window.innerWidth - margin.left - margin.right - 100;
-    const h = 400 - margin.top - margin.bottom;
+      // --- UI references ---
+      const svgEl = document.getElementById('timeline');
+      if(!svgEl) throw new Error('SVG element not found (#timeline)');
 
-    const svg = d3.select("#timeline")
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+      // Set responsive width based on viewport
+      const fullWidth = Math.max(900, Math.min(window.innerWidth - 80, 2200));
+      svgEl.setAttribute('width', fullWidth);
 
-    // compressed pseudo-log scale
-    const compress = y => {
-      const s = y < 0 ? -1 : 1;
-      return s * Math.log10(Math.abs(y) + 1);
-    };
-    const years = data.map(d => d.year);
-    const x = d3.scaleLinear()
-      .domain([compress(d3.min(years)), compress(d3.max(years))])
-      .range([0, w]);
+      const margin = {top:48, right:40, bottom:80, left:40};
+      const innerWidth = fullWidth - margin.left - margin.right;
+      const innerHeight = 420 - margin.top - margin.bottom;
 
-    const ticks = data.map(d => d.year);
-    const xAxis = d3.axisBottom(x)
-      .tickValues(ticks.map(compress))
-      .tickFormat((_, i) => ticks[i]);
-    const axisGroup = svg.append("g")
-      .attr("transform", `translate(0,${h})`)
-      .call(xAxis);
+      // Clear previous svg content then create D3 selection
+      const svg = d3.select('#timeline').selectAll('*').remove();
+      const root = d3.select('#timeline')
+        .append('g')
+        .attr('transform',`translate(${margin.left},${margin.top})`);
 
-    const colors = {
-      Visual: "#2a9d8f",
-      Sound: "#e76f51",
-      Interactive: "#f4a261",
-      Digital: "#264653"
-    };
+      // --- compressed "pseudo-log" scale to squeeze huge gaps ---
+      function compress(year){
+        // stable mapping for negative (BCE) and positive years
+        const sign = year < 0 ? -1 : 1;
+        const val = Math.log10(Math.abs(year) + 1); // +1 to handle 0
+        // scale factor to keep small ranges visible
+        return sign * val;
+      }
+      const years = data.map(d => d.year);
+      const domain = [compress(d3.min(years)), compress(d3.max(years))];
+      const x = d3.scaleLinear().domain(domain).range([0, innerWidth]);
 
-    const eventsGroup = svg.append("g").attr("class", "events");
-    const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+      // axis ticks positioned at the data points
+      const tickVals = data.map(d => compress(d.year));
+      const tickLabels = data.map(d => d.year);
 
-    function updateTimeline() {
-      const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
-        .map(cb => cb.value);
+      const xAxis = d3.axisBottom(x)
+        .tickValues(tickVals)
+        .tickFormat((d,i) => tickLabels[i])
+        .tickSizeOuter(0);
 
-      const filtered = data.filter(d => checked.includes(d.category));
+      root.append('g')
+        .attr('class','x axis')
+        .attr('transform',`translate(0,${innerHeight})`)
+        .call(xAxis)
+        .selectAll('text')
+        .style('font-size','12px');
 
-      const circles = eventsGroup.selectAll(".event")
-        .data(filtered, d => d.title);
+      // draw baseline
+      root.append('line')
+        .attr('x1',0).attr('x2',innerWidth)
+        .attr('y1',innerHeight/2).attr('y2',innerHeight/2)
+        .attr('stroke','#e6e6e6');
 
-      circles.enter()
-        .append("circle")
-        .attr("class", "event")
-        .attr("cx", d => x(compress(d.year)))
-        .attr("cy", h / 2)
-        .attr("r", 8)
-        .attr("fill", d => colors[d.category] || "#999")
-        .on("mouseover", (event, d) => {
-          tooltip.transition().duration(200).style("opacity", .95);
-          tooltip.html(`<strong>${d.title}</strong><br>${d.year}<br>${d.description}`)
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 40) + "px");
-        })
-        .on("mouseout", () => tooltip.transition().duration(300).style("opacity", 0))
-        .merge(circles)
-        .attr("cx", d => x(compress(d.year)))
-        .attr("cy", h / 2)
-        .attr("fill", d => colors[d.category] || "#999");
+      const colors = {Visual:'#2a9d8f', Sound:'#e76f51', Interactive:'#f4a261', Digital:'#264653'};
 
-      circles.exit().remove();
-    }
+      // tooltip
+      const tip = d3.select('body').append('div').attr('class','tooltip').style('opacity',0);
 
-    updateTimeline();
+      // group for events
+      const eventsG = root.append('g').attr('class','events');
 
-    // Zoom and pan
-    const zoom = d3.zoom()
-      .scaleExtent([.5, 10])
-      .translateExtent([[0, 0], [w, h]])
-      .on("zoom", e => {
-        const t = e.transform;
-        axisGroup.attr("transform", `translate(${t.x},${h}) scale(${t.k},1)`);
-        eventsGroup.attr("transform", `translate(${t.x},0) scale(${t.k},1)`);
+      // rendering function uses current filter checkboxes
+      function render(){
+        const checked = Array.from(document.querySelectorAll('.controls input[type="checkbox"]'))
+          .filter(cb => cb.checked).map(cb => cb.value);
+
+        const filtered = data.filter(d => checked.includes(d.category));
+
+        // DATA JOIN
+        const circles = eventsG.selectAll('circle.event')
+          .data(filtered, d => d.title);
+
+        // EXIT
+        circles.exit().remove();
+
+        // ENTER
+        const enter = circles.enter()
+          .append('circle')
+          .attr('class','event')
+          .attr('r',9)
+          .on('mouseover', (event,d) => {
+            tip.transition().duration(120).style('opacity',0.96);
+            tip.html(`<strong>${d.title}</strong><br/><em>${d.year}</em><div style="margin-top:6px;font-size:0.95rem">${d.description}</div>`)
+              .style('left', (event.pageX + 10) + 'px')
+              .style('top', (event.pageY - 40) + 'px');
+          })
+          .on('mousemove', (event) => {
+            tip.style('left', (event.pageX + 10) + 'px')
+               .style('top', (event.pageY - 40) + 'px');
+          })
+          .on('mouseout', ()=> tip.transition().duration(180).style('opacity',0));
+
+        // ENTER + UPDATE
+        enter.merge(circles)
+          .attr('cx', d => x(compress(d.year)))
+          .attr('cy', innerHeight/2)
+          .attr('fill', d => colors[d.category] || '#888')
+          .attr('stroke','#222')
+          .attr('stroke-opacity',0.05);
+      }
+
+      // initial render
+      render();
+
+      // wire up checkboxes
+      document.querySelectorAll('.controls input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => render());
       });
 
-    d3.select("#timeline").call(zoom);
+      // Zoom & pan: we transform the event group and axis together
+      const zoom = d3.zoom()
+        .scaleExtent([0.6, 14])
+        .extent([[0,0], [innerWidth, innerHeight]])
+        .translateExtent([[-innerWidth, -100], [innerWidth * 2, innerHeight + 100]])
+        .on('zoom', ({transform}) => {
+          eventsG.attr('transform', `translate(${transform.x},0) scale(${transform.k},1)`);
+          root.select('.x.axis').attr('transform', `translate(${transform.x},${innerHeight}) scale(${transform.k},1)`);
+        });
 
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb =>
-      cb.addEventListener('change', updateTimeline)
-    );
+      d3.select('#timeline').call(zoom);
+
+      // make interactive for keyboard accessibility: reset view with 'r'
+      window.addEventListener('keydown', e => {
+        if(e.key === 'r') d3.select('#timeline').transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+      });
+
+      // debug helper visible on page
+      function showNotice(msg){
+        const el = document.getElementById('fallback');
+        el.style.display = 'block'; el.textContent = msg;
+      }
+
+      // small success mark in console
+      console.log('Timeline rendered: events:', data.length);
+
+    } catch (err) {
+      // show error both on page and in console for quick debugging
+      console.error('Timeline error', err);
+      const dbg = document.getElementById('debug');
+      dbg.style.display = 'block';
+      dbg.textContent = 'Error initializing timeline: ' + (err && err.stack ? err.stack : String(err));
+      document.getElementById('fallback').style.display = 'block';
+      document.getElementById('fallback').textContent = 'A problem occurred rendering the timeline — open DevTools (F12) and paste the first console error here.';
+    }
+  })();
   </script>
 </body>
 </html>
