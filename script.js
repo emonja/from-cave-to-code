@@ -1,77 +1,54 @@
-// Basic force-directed map of media evolution
-const width = window.innerWidth;
-const height = window.innerHeight * 0.8;
+const svg = d3.select("#timeline");
+const margin = { top: 80, right: 40, bottom: 80, left: 40 };
+const width = 1800 - margin.left - margin.right;
+const height = 400 - margin.top - margin.bottom;
 
-const svg = d3.select("#chart")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height);
+const g = svg
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+  .attr("transform", `translate(${margin.left},${margin.top})`);
+
+const color = d3.scaleOrdinal()
+  .domain(["Visual", "Sound", "Interactive", "Digital"])
+  .range(["#ff8c00", "#1e90ff", "#8a2be2", "#2ecc71"]);
+
+const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 
 d3.json("data/media_timeline.json").then(data => {
-  const color = d3.scaleOrdinal(d3.schemeTableau10);
+  const x = d3.scaleLinear()
+    .domain(d3.extent(data, d => d.year))
+    .range([0, width]);
 
-  const simulation = d3.forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.links).id(d => d.id).distance(80))
-    .force("charge", d3.forceManyBody().strength(-150))
-    .force("center", d3.forceCenter(width / 2, height / 2));
+  const xAxis = d3.axisBottom(x)
+    .tickFormat(d => d < 0 ? `${-d} BCE` : d)
+    .ticks(20);
 
-  const link = svg.append("g")
-    .attr("stroke", "#ccc")
-    .selectAll("line")
-    .data(data.links)
-    .join("line")
-    .attr("stroke-width", 1.5);
+  g.append("g")
+    .attr("transform", `translate(0,${height / 2})`)
+    .call(xAxis);
 
-  const node = svg.append("g")
-    .selectAll("circle")
-    .data(data.nodes)
-    .join("circle")
-    .attr("r", 6)
-    .attr("fill", d => color(d.group))
-    .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended));
+  const events = g.selectAll(".event")
+    .data(data)
+    .enter()
+    .append("g")
+    .attr("class", "event")
+    .attr("transform", d => `translate(${x(d.year)},${height / 2})`);
 
-  const label = svg.append("g")
-    .selectAll("text")
-    .data(data.nodes)
-    .join("text")
-    .text(d => d.id)
-    .attr("font-size", 10)
-    .attr("dx", 8)
-    .attr("dy", 3);
+  events.append("circle")
+    .attr("class", "event-circle")
+    .attr("r", 8)
+    .attr("fill", d => color(d.category))
+    .on("mouseover", (event, d) => {
+      tooltip.transition().duration(200).style("opacity", .9);
+      tooltip.html(`<strong>${d.title}</strong><br>${d.year}<br>${d.description}`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", () => tooltip.transition().duration(300).style("opacity", 0));
 
-  simulation.on("tick", () => {
-    link
-      .attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y);
-
-    node
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y);
-
-    label
-      .attr("x", d => d.x)
-      .attr("y", d => d.y);
-  });
-
-  function dragstarted(event, d) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-  }
-
-  function dragged(event, d) {
-    d.fx = event.x;
-    d.fy = event.y;
-  }
-
-  function dragended(event, d) {
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-  }
+  events.append("text")
+    .attr("class", "event-label")
+    .attr("y", (d, i) => (i % 2 === 0 ? -20 : 30))
+    .text(d => d.title);
 });

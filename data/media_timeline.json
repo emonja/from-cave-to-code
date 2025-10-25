@@ -1,26 +1,15 @@
-{
-  "nodes": [
-    {"id": "Cave Paintings", "group": "Visual"},
-    {"id": "Printing Press", "group": "Visual"},
-    {"id": "Photography", "group": "Visual"},
-    {"id": "Film", "group": "Visual"},
-    {"id": "Radio", "group": "Sound"},
-    {"id": "Synthesizer", "group": "Sound"},
-    {"id": "Television", "group": "Hybrid"},
-    {"id": "Video Games", "group": "Interactive"},
-    {"id": "Internet", "group": "Digital"},
-    {"id": "Social Media", "group": "Digital"},
-    {"id": "VR/AR", "group": "Interactive"}
-  ],
-  "links": [
-    {"source": "Cave Paintings", "target": "Printing Press"},
-    {"source": "Printing Press", "target": "Photography"},
-    {"source": "Photography", "target": "Film"},
-    {"source": "Film", "target": "Television"},
-    {"source": "Television", "target": "Internet"},
-    {"source": "Radio", "target": "Synthesizer"},
-    {"source": "Internet", "target": "Video Games"},
-    {"source": "Video Games", "target": "VR/AR"},
-    {"source": "Internet", "target": "Social Media"}
-  ]
-}
+[
+  { "year": -30000, "title": "Cave Paintings", "category": "Visual", "description": "Earliest representational art found in European caves." },
+  { "year": -3200,  "title": "Writing Systems", "category": "Visual", "description": "Sumerian cuneiform; beginning of recorded communication." },
+  { "year": 1440,   "title": "Printing Press", "category": "Visual", "description": "Gutenberg’s movable type revolutionizes reproduction." },
+  { "year": 1839,   "title": "Photography", "category": "Visual", "description": "Daguerreotype introduces mechanical image capture." },
+  { "year": 1877,   "title": "Phonograph", "category": "Sound", "description": "Edison’s device records and plays back sound." },
+  { "year": 1895,   "title": "Film Projection", "category": "Visual", "description": "Lumière brothers’ public screenings of motion pictures." },
+  { "year": 1920,   "title": "Radio Broadcast", "category": "Sound", "description": "Mass communication via electromagnetic waves." },
+  { "year": 1950,   "title": "Television", "category": "Visual", "description": "Visual broadcast becomes a household medium." },
+  { "year": 1960,   "title": "Synthesizer", "category": "Sound", "description": "Electronic instruments redefine composition." },
+  { "year": 1972,   "title": "Video Games", "category": "Interactive", "description": "Pong and early arcades introduce digital play." },
+  { "year": 1991,   "title": "World Wide Web", "category": "Digital", "description": "Hypertext protocol enables the modern internet." },
+  { "year": 2004,   "title": "Social Media", "category": "Digital", "description": "Web 2.0 connects billions through user-generated content." },
+  { "year": 2016,   "title": "VR & AR", "category": "Interactive", "description": "Immersive environments blend digital and physical." }
+]
