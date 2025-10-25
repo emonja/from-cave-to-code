@@ -1,0 +1,26 @@
+{
+  "nodes": [
+    {"id": "Cave Paintings", "group": "Visual"},
+    {"id": "Printing Press", "group": "Visual"},
+    {"id": "Photography", "group": "Visual"},
+    {"id": "Film", "group": "Visual"},
+    {"id": "Radio", "group": "Sound"},
+    {"id": "Synthesizer", "group": "Sound"},
+    {"id": "Television", "group": "Hybrid"},
+    {"id": "Video Games", "group": "Interactive"},
+    {"id": "Internet", "group": "Digital"},
+    {"id": "Social Media", "group": "Digital"},
+    {"id": "VR/AR", "group": "Interactive"}
+  ],
+  "links": [
+    {"source": "Cave Paintings", "target": "Printing Press"},
+    {"source": "Printing Press", "target": "Photography"},
+    {"source": "Photography", "target": "Film"},
+    {"source": "Film", "target": "Television"},
+    {"source": "Television", "target": "Internet"},
+    {"source": "Radio", "target": "Synthesizer"},
+    {"source": "Internet", "target": "Video Games"},
+    {"source": "Video Games", "target": "VR/AR"},
+    {"source": "Internet", "target": "Social Media"}
+  ]
+}
